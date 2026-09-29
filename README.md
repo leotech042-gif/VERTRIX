@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Veytrix
 
-## Getting Started
+AI-powered trading intelligence platform built with **Next.js 16**, live market data, charts, signals, terminal and risk tools.
 
-First, run the development server:
+## Features
+
+- Live market prices (Binance for crypto, Yahoo for forex/metals/indices)
+- Candlestick charts (`lightweight-charts` v5)
+- Markets explorer + watchlist (saved in browser)
+- AI Signals board
+- Trading Terminal (demo order ticket)
+- Risk Engine (position size calculator)
+- Dark / light theme
+- Landing page with live ticker and real charts
+
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Demo login
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Any email + password on `/login` or `/signup` opens the dashboard (no real auth yet).
 
-## Learn More
+## Project structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+app/
+  page.tsx                 # Landing
+  login/ signup/           # Auth (demo)
+  dashboard/               # App workspace
+    markets/
+    signals/
+    terminal/
+    risk-engine/
+  api/market/              # Live data API routes
+components/
+  charts/                  # PriceChart
+  landing/                 # FAQ, ticker, showcase
+  theme/                   # Dark mode
+  ui/                      # Button, Card, Input, Badge
+  dashboard/               # Shared dashboard pieces
+hooks/                     # useLiveTickers, useWatchlist
+lib/                       # market-data, utils
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Command        | Description        |
+|----------------|--------------------|
+| `npm run dev`  | Development server |
+| `npm run build`| Production build   |
+| `npm run start`| Start production   |
+| `npm run lint` | ESLint             |
 
-## Deploy on Vercel
+## Notes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Market data is public and may rate-limit; the app falls back gracefully.
+- Not financial advice. Trading involves risk.
