@@ -2,58 +2,64 @@
 
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
+
+function getTheme(): "dark" | "light" {
+  if (typeof document === "undefined") return "dark";
+  const attr = document.documentElement.getAttribute("data-theme");
+  if (attr === "light" || attr === "dark") return attr;
+  try {
+    const stored = localStorage.getItem("veytrix-theme");
+    if (stored === "light" || stored === "dark") return stored;
+  } catch {
+    // ignore
+  }
+  return "dark";
+}
+
+function applyTheme(theme: "dark" | "light") {
+  document.documentElement.setAttribute("data-theme", theme);
+  try {
+    localStorage.setItem("veytrix-theme", theme);
+  } catch {
+    // ignore
+  }
+}
 
 export function ThemeToggle() {
-  const { setTheme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const t = getTheme();
+    applyTheme(t);
+    setTheme(t);
+    setReady(true);
   }, []);
 
-  function toggleTheme() {
-    const next = resolvedTheme === "light" ? "dark" : "light";
+  function toggle() {
+    const next = theme === "dark" ? "light" : "dark";
+    applyTheme(next);
     setTheme(next);
   }
 
-  if (!mounted) {
+  if (!ready) {
     return (
       <button
         type="button"
         aria-label="Toggle theme"
-        className="relative flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--surface)]"
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--surface)]"
       />
     );
   }
 
-  const isLight = resolvedTheme === "light";
-
   return (
     <button
       type="button"
-      aria-label={isLight ? "Switch to dark mode" : "Switch to light mode"}
-      onClick={toggleTheme}
-      className="group relative flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--foreground)] transition-all duration-300 hover:border-[var(--accent-border)] hover:bg-[var(--surface-elevated)]"
+      aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+      onClick={toggle}
+      className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--foreground)] transition-all duration-200 hover:border-[var(--accent-border)] hover:bg-[var(--surface-elevated)] hover:scale-105 active:scale-95"
     >
-      <Sun
-        size={17}
-        strokeWidth={2}
-        className={`absolute transition-all duration-300 ${
-          isLight
-            ? "rotate-0 scale-100 opacity-100"
-            : "rotate-90 scale-0 opacity-0"
-        }`}
-      />
-      <Moon
-        size={17}
-        strokeWidth={2}
-        className={`absolute transition-all duration-300 ${
-          isLight
-            ? "-rotate-90 scale-0 opacity-0"
-            : "rotate-0 scale-100 opacity-100"
-        }`}
-      />
+      {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
     </button>
   );
 }

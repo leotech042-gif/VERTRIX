@@ -1,22 +1,18 @@
 "use client";
 
-import * as React from "react";
-import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { useEffect } from "react";
 
-type ThemeProviderProps = React.ComponentProps<typeof NextThemesProvider>;
+/** Applies saved theme before paint to avoid flash */
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("veytrix-theme");
+      const theme = stored === "light" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", theme);
+    } catch {
+      document.documentElement.setAttribute("data-theme", "dark");
+    }
+  }, []);
 
-export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  return (
-    <NextThemesProvider
-      attribute="data-theme"
-      defaultTheme="dark"
-      enableSystem={false}
-      enableColorScheme
-      storageKey="veytrix-theme"
-      disableTransitionOnChange={false}
-      {...props}
-    >
-      {children}
-    </NextThemesProvider>
-  );
+  return <>{children}</>;
 }
