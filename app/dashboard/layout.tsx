@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "motion/react";
 import {
-  Activity,
+  BookOpen,
   Brain,
   ChartCandlestick,
+  FlaskConical,
   LayoutDashboard,
   LogOut,
   ShieldCheck,
@@ -20,6 +20,8 @@ const navItems = [
   { href: "/dashboard/signals", label: "AI Signals", icon: Brain },
   { href: "/dashboard/terminal", label: "Terminal", icon: Terminal },
   { href: "/dashboard/risk-engine", label: "Risk Engine", icon: ShieldCheck },
+  { href: "/dashboard/journal", label: "Journal", icon: BookOpen },
+  { href: "/dashboard/backtesting", label: "Backtesting", icon: FlaskConical },
 ];
 
 export default function DashboardLayout({
@@ -31,21 +33,19 @@ export default function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-[var(--background)] text-[var(--foreground)]">
-      <aside className="fixed inset-y-0 left-0 z-40 flex w-60 flex-col border-r border-[var(--border)] bg-[var(--surface)]">
-        <div className="flex h-16 items-center gap-2.5 border-b border-[var(--border)] px-5">
+      <aside className="fixed inset-y-0 left-0 z-40 flex w-56 flex-col border-r border-[var(--border)] bg-[var(--surface)] sm:w-60">
+        <div className="flex h-14 items-center gap-2 border-b border-[var(--border)] px-4">
           <Link href="/" className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--accent-border)] bg-[var(--accent-soft)]">
-              <span className="h-2 w-2 rounded-full bg-[var(--accent)] shadow-[0_0_12px_var(--accent)]" />
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--accent)]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#050607]" />
             </span>
-            <span className="text-base font-semibold tracking-[-0.03em]">
-              Veytrix
-            </span>
+            <span className="text-sm font-semibold">Veytrix</span>
           </Link>
         </div>
 
-        <nav className="flex-1 space-y-1 px-3 py-4">
+        <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 py-3">
           {navItems.map(({ href, label, icon: Icon }) => {
-            const isActive =
+            const active =
               href === "/dashboard"
                 ? pathname === "/dashboard"
                 : pathname.startsWith(href);
@@ -54,55 +54,35 @@ export default function DashboardLayout({
               <Link
                 key={href}
                 href={href}
-                className={`relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition ${
-                  isActive
+                className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition ${
+                  active
                     ? "bg-[var(--accent-soft)] font-medium text-[var(--accent)]"
                     : "text-[var(--muted)] hover:bg-[var(--surface-elevated)] hover:text-[var(--foreground)]"
                 }`}
               >
-                {isActive && (
-                  <motion.span
-                    layoutId="nav-active"
-                    className="absolute inset-0 rounded-xl bg-[var(--accent-soft)]"
-                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                  />
-                )}
-                <Icon size={17} strokeWidth={1.7} className="relative z-10" />
-                <span className="relative z-10">{label}</span>
+                <Icon size={16} strokeWidth={1.75} />
+                {label}
               </Link>
             );
           })}
         </nav>
 
-        <div className="border-t border-[var(--border)] p-3">
-          <div className="mb-3 flex items-center justify-between px-2">
-            <div className="flex items-center gap-2">
-              <Activity size={14} className="text-[var(--accent)]" />
-              <span className="text-[10px] text-[var(--muted)]">Live data</span>
-            </div>
+        <div className="border-t border-[var(--border)] p-2">
+          <div className="mb-2 flex items-center justify-between px-2">
+            <span className="text-[10px] text-[var(--muted)]">Theme</span>
             <ThemeToggle />
           </div>
-
           <Link
             href="/"
-            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-[var(--muted)] transition hover:bg-[var(--surface-elevated)] hover:text-[var(--foreground)]"
+            className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-[var(--muted)] hover:bg-[var(--surface-elevated)] hover:text-[var(--foreground)]"
           >
-            <LogOut size={17} strokeWidth={1.7} />
-            Back to site
+            <LogOut size={16} />
+            Exit
           </Link>
         </div>
       </aside>
 
-      <div className="ml-60 flex-1">
-        <motion.div
-          key={pathname}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
-        >
-          {children}
-        </motion.div>
-      </div>
+      <div className="ml-56 flex-1 sm:ml-60">{children}</div>
     </div>
   );
 }

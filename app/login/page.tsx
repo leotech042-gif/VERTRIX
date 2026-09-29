@@ -7,18 +7,36 @@ import { ArrowRight, Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError("");
+
+    if (!email.trim() || !password.trim()) {
+      setError("Enter email and password.");
+      return;
+    }
+
     setLoading(true);
-    // Demo auth — no backend yet
-    setTimeout(() => {
+    try {
+      // Demo auth — store a simple session flag
+      if (typeof window !== "undefined") {
+        localStorage.setItem(
+          "veytrix-session",
+          JSON.stringify({ email: email.trim(), at: Date.now() }),
+        );
+      }
       router.push("/dashboard");
-    }, 400);
+      router.refresh();
+    } catch {
+      setError("Something went wrong. Try again.");
+      setLoading(false);
+    }
   }
 
   return (
@@ -26,104 +44,86 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <Link href="/" className="inline-flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--accent-border)] bg-[var(--accent-soft)]">
-              <span className="h-2.5 w-2.5 rounded-full bg-[var(--accent)] shadow-[0_0_14px_var(--accent)]" />
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--accent)]">
+              <span className="h-2 w-2 rounded-full bg-[#050607]" />
             </span>
-            <span className="text-lg font-semibold tracking-[-0.03em]">
-              Veytrix
-            </span>
+            <span className="text-lg font-semibold">Veytrix</span>
           </Link>
-          <h1 className="mt-6 text-2xl font-semibold tracking-[-0.03em]">
-            Welcome back
-          </h1>
+          <h1 className="mt-6 text-2xl font-semibold">Welcome back</h1>
           <p className="mt-2 text-sm text-[var(--muted)]">
-            Sign in to your trading workspace
+            Sign in to your workspace
           </p>
         </div>
 
         <form
-          onSubmit={handleSubmit}
+          onSubmit={onSubmit}
           className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-8"
         >
           <div className="space-y-4">
             <div>
-              <label
-                htmlFor="email"
-                className="mb-1.5 block text-xs font-medium text-[var(--muted-strong)]"
-              >
+              <label htmlFor="email" className="mb-1.5 block text-xs font-medium text-[var(--muted-strong)]">
                 Email
               </label>
               <input
                 id="email"
                 type="email"
-                required
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3.5 text-sm outline-none transition focus:border-[var(--accent-border)]"
+                className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3.5 text-sm outline-none focus:border-[var(--accent-border)]"
               />
             </div>
 
             <div>
-              <label
-                htmlFor="password"
-                className="mb-1.5 block text-xs font-medium text-[var(--muted-strong)]"
-              >
+              <label htmlFor="password" className="mb-1.5 block text-xs font-medium text-[var(--muted-strong)]">
                 Password
               </label>
               <div className="relative">
                 <input
                   id="password"
-                  type={showPassword ? "text" : "password"}
-                  required
+                  type={show ? "text" : "password"}
+                  autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3.5 pr-11 text-sm outline-none transition focus:border-[var(--accent-border)]"
+                  className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3.5 pr-11 text-sm outline-none focus:border-[var(--accent-border)]"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--foreground)]"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShow((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted)]"
+                  aria-label="Toggle password"
                 >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {show ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
           </div>
 
-          <div className="mt-3 flex justify-end">
-            <button
-              type="button"
-              className="text-xs text-[var(--muted)] hover:text-[var(--accent)]"
-            >
-              Forgot password?
-            </button>
-          </div>
+          {error && (
+            <p className="mt-3 text-xs text-[var(--danger)]">{error}</p>
+          )}
 
           <button
             type="submit"
             disabled={loading}
-            className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent)] text-sm font-semibold text-[#050607] transition hover:opacity-90 disabled:opacity-60"
+            className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent)] text-sm font-semibold text-[#050607] hover:opacity-90 disabled:opacity-60"
           >
             {loading ? "Signing in…" : "Sign in"}
             {!loading && <ArrowRight size={16} />}
           </button>
 
           <p className="mt-5 text-center text-xs text-[var(--muted)]">
-            Don&apos;t have an account?{" "}
-            <Link
-              href="/signup"
-              className="font-medium text-[var(--accent)] hover:underline"
-            >
-              Create one
+            No account?{" "}
+            <Link href="/signup" className="font-medium text-[var(--accent)]">
+              Sign up
             </Link>
           </p>
         </form>
 
         <p className="mt-6 text-center text-[10px] text-[var(--muted)]">
-          Demo mode — any email and password will open the dashboard
+          Demo: any email and password works
         </p>
       </div>
     </main>
