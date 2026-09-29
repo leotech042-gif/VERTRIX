@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import {
   Activity,
   ArrowUpRight,
@@ -12,6 +13,7 @@ import {
   Star,
   WifiOff,
 } from "lucide-react";
+import { PriceChart } from "@/components/charts/price-chart";
 
 type Category = "Forex" | "Metals" | "Crypto" | "Indices" | "Energies";
 
@@ -81,19 +83,19 @@ const instruments: Instrument[] = [
     symbol: "US100",
     name: "US Tech 100",
     category: "Indices",
-    description: "Equity index — provider naming may vary",
+    description: "Equity index",
   },
   {
     symbol: "US500",
     name: "US 500",
     category: "Indices",
-    description: "Equity index — provider naming may vary",
+    description: "Equity index",
   },
   {
     symbol: "USOIL",
     name: "US Crude Oil",
     category: "Energies",
-    description: "Energy instrument — provider naming may vary",
+    description: "Energy instrument",
   },
 ];
 
@@ -151,7 +153,7 @@ export default function MarketsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--background)] px-4 py-7 text-[var(--foreground)] sm:px-6 lg:px-8">
+    <main className="min-h-screen px-4 py-7 text-[var(--foreground)] sm:px-6 lg:px-8">
       <div className="mx-auto max-w-[1500px] space-y-7">
         <header className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div>
@@ -174,7 +176,7 @@ export default function MarketsPage() {
           <div className="flex w-fit items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5">
             <WifiOff size={15} className="text-[var(--warning)]" />
             <span className="text-xs text-[var(--muted-strong)]">
-              Market feed not connected
+              Demo data · Live feed pending
             </span>
           </div>
         </header>
@@ -195,14 +197,14 @@ export default function MarketsPage() {
             },
             {
               label: "Market data",
-              value: "Offline",
-              note: "Provider integration pending",
+              value: "Demo",
+              note: "Mock candles active",
               icon: Activity,
             },
             {
               label: "Market hours",
               value: "Unavailable",
-              note: "Requires instrument session data",
+              note: "Requires live session data",
               icon: Clock3,
             },
           ].map(({ label, value, note, icon: Icon }) => (
@@ -222,136 +224,161 @@ export default function MarketsPage() {
           ))}
         </section>
 
-        <section className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.8fr)]">
-          <div className="min-w-0 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
-            <div className="flex flex-col gap-4 border-b border-[var(--border)] p-4 sm:p-5">
-              <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+        <section className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(340px,0.9fr)]">
+          <div className="min-w-0 space-y-5">
+            {/* Chart panel */}
+            <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
+              <div className="mb-4 flex items-center justify-between">
                 <div>
-                  <h2 className="text-base font-semibold">
-                    Instrument explorer
-                  </h2>
-                  <p className="mt-1 text-xs text-[var(--muted)]">
-                    Browse the initial instrument directory
+                  <p className="text-sm font-semibold">
+                    {selectedInstrument.symbol}
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-[var(--muted)]">
+                    {selectedInstrument.name}
                   </p>
                 </div>
-
-                <span className="text-xs text-[var(--muted)]">
-                  {visibleInstruments.length} results
-                </span>
+                <Link
+                  href="/dashboard/terminal"
+                  className="flex items-center gap-1 rounded-lg border border-[var(--border)] px-3 py-1.5 text-[10px] transition hover:border-[var(--accent-border)] hover:text-[var(--accent)]"
+                >
+                  Open terminal
+                  <ArrowUpRight size={12} />
+                </Link>
               </div>
-
-              <div className="relative">
-                <Search
-                  size={16}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted)]"
-                />
-                <input
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Search symbol, instrument or category..."
-                  aria-label="Search instruments"
-                  className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] pl-10 pr-4 text-sm outline-none transition focus:border-[var(--accent-border)]"
-                />
-              </div>
-
-              <div className="flex gap-2 overflow-x-auto pb-1">
-                {categories.map((category) => (
-                  <button
-                    key={category}
-                    type="button"
-                    onClick={() => setFilter(category)}
-                    className={`shrink-0 rounded-lg border px-3 py-2 text-xs transition ${
-                      filter === category
-                        ? "border-[var(--accent-border)] bg-[var(--accent-soft)] font-medium text-[var(--accent)]"
-                        : "border-[var(--border)] text-[var(--muted)] hover:text-[var(--foreground)]"
-                    }`}
-                  >
-                    {category}
-                  </button>
-                ))}
-              </div>
+              <PriceChart symbol={selectedInstrument.symbol} height={340} />
             </div>
 
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 border-b border-[var(--border)] px-4 py-3 text-[10px] uppercase tracking-wider text-[var(--muted)] sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto] sm:px-5">
-              <span>Instrument</span>
-              <span className="hidden sm:block">Category</span>
-              <span className="text-right">Action</span>
-            </div>
+            {/* Instrument list */}
+            <div className="min-w-0 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
+              <div className="flex flex-col gap-4 border-b border-[var(--border)] p-4 sm:p-5">
+                <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+                  <div>
+                    <h2 className="text-base font-semibold">
+                      Instrument explorer
+                    </h2>
+                    <p className="mt-1 text-xs text-[var(--muted)]">
+                      Browse the initial instrument directory
+                    </p>
+                  </div>
 
-            <div>
-              {visibleInstruments.map((instrument) => {
-                const isSelected = selectedSymbol === instrument.symbol;
-                const isSaved = watchlist.includes(instrument.symbol);
+                  <span className="text-xs text-[var(--muted)]">
+                    {visibleInstruments.length} results
+                  </span>
+                </div>
 
-                return (
-                  <div
-                    key={instrument.symbol}
-                    className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-[var(--border)] px-4 py-4 transition last:border-b-0 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto] sm:px-5 ${
-                      isSelected
-                        ? "bg-[var(--accent-soft)]"
-                        : "hover:bg-[var(--surface-elevated)]"
-                    }`}
-                  >
+                <div className="relative">
+                  <Search
+                    size={16}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted)]"
+                  />
+                  <input
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Search symbol, instrument or category..."
+                    aria-label="Search instruments"
+                    className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] pl-10 pr-4 text-sm outline-none transition focus:border-[var(--accent-border)]"
+                  />
+                </div>
+
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {categories.map((category) => (
                     <button
+                      key={category}
                       type="button"
-                      onClick={() => setSelectedSymbol(instrument.symbol)}
-                      className="min-w-0 text-left"
+                      onClick={() => setFilter(category)}
+                      className={`shrink-0 rounded-lg border px-3 py-2 text-xs transition ${
+                        filter === category
+                          ? "border-[var(--accent-border)] bg-[var(--accent-soft)] font-medium text-[var(--accent)]"
+                          : "border-[var(--border)] text-[var(--muted)] hover:text-[var(--foreground)]"
+                      }`}
                     >
-                      <span className="block truncate text-sm font-semibold">
-                        {instrument.symbol}
-                      </span>
-                      <span className="mt-1 block truncate text-xs text-[var(--muted)]">
-                        {instrument.name}
-                      </span>
+                      {category}
                     </button>
+                  ))}
+                </div>
+              </div>
 
-                    <div className="hidden sm:block">
-                      <span className="rounded-md border border-[var(--border)] px-2 py-1 text-[10px] text-[var(--muted-strong)]">
-                        {instrument.category}
-                      </span>
-                    </div>
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 border-b border-[var(--border)] px-4 py-3 text-[10px] uppercase tracking-wider text-[var(--muted)] sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto] sm:px-5">
+                <span>Instrument</span>
+                <span className="hidden sm:block">Category</span>
+                <span className="text-right">Action</span>
+              </div>
 
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={() => toggleWatchlist(instrument.symbol)}
-                        aria-label={
-                          isSaved
-                            ? `Remove ${instrument.symbol} from watchlist`
-                            : `Add ${instrument.symbol} to watchlist`
-                        }
-                        className="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--muted)] transition hover:border-[var(--accent-border)] hover:text-[var(--accent)]"
-                      >
-                        <Star
-                          size={15}
-                          fill={isSaved ? "currentColor" : "none"}
-                          className={isSaved ? "text-[var(--accent)]" : ""}
-                        />
-                      </button>
+              <div>
+                {visibleInstruments.map((instrument) => {
+                  const isSelected = selectedSymbol === instrument.symbol;
+                  const isSaved = watchlist.includes(instrument.symbol);
 
+                  return (
+                    <div
+                      key={instrument.symbol}
+                      className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-[var(--border)] px-4 py-4 transition last:border-b-0 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto] sm:px-5 ${
+                        isSelected
+                          ? "bg-[var(--accent-soft)]"
+                          : "hover:bg-[var(--surface-elevated)]"
+                      }`}
+                    >
                       <button
                         type="button"
                         onClick={() => setSelectedSymbol(instrument.symbol)}
-                        className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs transition hover:border-[var(--accent-border)] hover:text-[var(--accent)]"
+                        className="min-w-0 text-left"
                       >
-                        View
+                        <span className="block truncate text-sm font-semibold">
+                          {instrument.symbol}
+                        </span>
+                        <span className="mt-1 block truncate text-xs text-[var(--muted)]">
+                          {instrument.name}
+                        </span>
                       </button>
-                    </div>
-                  </div>
-                );
-              })}
 
-              {visibleInstruments.length === 0 && (
-                <div className="px-5 py-14 text-center">
-                  <Search size={22} className="mx-auto text-[var(--muted)]" />
-                  <p className="mt-3 text-sm font-medium">
-                    No instruments found
-                  </p>
-                  <p className="mt-1 text-xs text-[var(--muted)]">
-                    Try another search or category.
-                  </p>
-                </div>
-              )}
+                      <div className="hidden sm:block">
+                        <span className="rounded-md border border-[var(--border)] px-2 py-1 text-[10px] text-[var(--muted-strong)]">
+                          {instrument.category}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => toggleWatchlist(instrument.symbol)}
+                          aria-label={
+                            isSaved
+                              ? `Remove ${instrument.symbol} from watchlist`
+                              : `Add ${instrument.symbol} to watchlist`
+                          }
+                          className="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--muted)] transition hover:border-[var(--accent-border)] hover:text-[var(--accent)]"
+                        >
+                          <Star
+                            size={15}
+                            fill={isSaved ? "currentColor" : "none"}
+                            className={isSaved ? "text-[var(--accent)]" : ""}
+                          />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setSelectedSymbol(instrument.symbol)}
+                          className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs transition hover:border-[var(--accent-border)] hover:text-[var(--accent)]"
+                        >
+                          View
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {visibleInstruments.length === 0 && (
+                  <div className="px-5 py-14 text-center">
+                    <Search size={22} className="mx-auto text-[var(--muted)]" />
+                    <p className="mt-3 text-sm font-medium">
+                      No instruments found
+                    </p>
+                    <p className="mt-1 text-xs text-[var(--muted)]">
+                      Try another search or category.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -399,13 +426,13 @@ export default function MarketsPage() {
                   </span>
                   <span className="flex items-center gap-1.5 text-[10px] text-[var(--warning)]">
                     <WifiOff size={12} />
-                    No feed
+                    Demo
                   </span>
                 </div>
 
                 <p className="mt-3 text-2xl font-semibold tracking-tight">—</p>
                 <p className="mt-1 text-xs text-[var(--muted)]">
-                  Waiting for a verified market-data source
+                  Live quotes require a market-data provider
                 </p>
               </div>
 
@@ -419,34 +446,18 @@ export default function MarketsPage() {
                 <div className="rounded-xl border border-[var(--border)] p-3">
                   <p className="text-[10px] text-[var(--muted)]">Data status</p>
                   <p className="mt-2 text-sm font-medium text-[var(--warning)]">
-                    Disconnected
+                    Demo candles
                   </p>
                 </div>
               </div>
 
-              <div className="mt-4 rounded-xl border border-dashed border-[var(--border-strong)] p-4">
-                <div className="flex items-center gap-2">
-                  <ChartCandlestick
-                    size={16}
-                    className="text-[var(--accent)]"
-                  />
-                  <p className="text-xs font-medium">Chart workspace</p>
-                </div>
-                <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
-                  Interactive candles, timeframes and drawing tools will be
-                  connected after market data is configured.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                disabled
-                className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[var(--surface-elevated)] text-xs font-semibold text-[var(--muted)]"
-                title="Available after the instrument chart and analysis modules are integrated"
+              <Link
+                href="/dashboard/terminal"
+                className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent)] text-xs font-semibold text-[#050607] transition hover:opacity-90"
               >
                 Open analysis
                 <ChevronRight size={15} />
-              </button>
+              </Link>
             </div>
 
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
@@ -489,14 +500,6 @@ export default function MarketsPage() {
             </div>
           </aside>
         </section>
-
-        <footer className="flex flex-col gap-2 border-t border-[var(--border)] pt-4 text-[11px] text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between">
-          <span>Instrument directory · Initial build</span>
-          <span className="flex items-center gap-1.5">
-            <ArrowUpRight size={12} />
-            Quotes and trading sessions are not yet connected
-          </span>
-        </footer>
       </div>
     </main>
   );
