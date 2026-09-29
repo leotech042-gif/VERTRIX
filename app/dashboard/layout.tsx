@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import {
   BookOpen,
   Brain,
@@ -10,12 +9,10 @@ import {
   ChartCandlestick,
   FlaskConical,
   LayoutDashboard,
-  LogOut,
   Settings,
   ShieldCheck,
   Terminal,
 } from "lucide-react";
-import { clearSession, getSession, type Session } from "@/lib/auth";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 const navItems = [
@@ -35,49 +32,14 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const [session, setSess] = useState<Session | null>(null);
-  const [checking, setChecking] = useState(true);
-
-  useEffect(() => {
-    const s = getSession();
-    if (!s) {
-      router.replace("/signup");
-      return;
-    }
-    if (!s.verified) {
-      router.replace("/verify-email");
-      return;
-    }
-    setSess(s);
-    setChecking(false);
-  }, [router]);
-
-  function logout() {
-    clearSession();
-    router.push("/");
-  }
-
-  if (checking) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--background)] text-[var(--muted)]">
-        Loading workspace…
-      </div>
-    );
-  }
 
   return (
     <div className="flex min-h-screen bg-[var(--background)] text-[var(--foreground)]">
       <aside className="fixed inset-y-0 left-0 z-40 flex w-56 flex-col border-r border-[var(--border)] bg-[var(--surface)] sm:w-60">
-        <div className="border-b border-[var(--border)] px-4 py-3">
+        <div className="flex h-14 items-center border-b border-[var(--border)] px-4">
           <Link href="/" className="text-sm font-semibold">
             Veytrix
           </Link>
-          {session && (
-            <p className="mt-1 truncate text-[10px] text-[var(--muted)]">
-              {session.name || session.email}
-            </p>
-          )}
         </div>
 
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 py-3">
@@ -115,14 +77,12 @@ export default function DashboardLayout({
             <span className="text-[10px] text-[var(--muted)]">Theme</span>
             <ThemeToggle />
           </div>
-          <button
-            type="button"
-            onClick={logout}
-            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-[var(--muted)] hover:bg-[var(--surface-elevated)] hover:text-[var(--foreground)]"
+          <Link
+            href="/"
+            className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-[var(--muted)] hover:bg-[var(--surface-elevated)] hover:text-[var(--foreground)]"
           >
-            <LogOut size={16} />
-            Log out
-          </button>
+            Back to site
+          </Link>
         </div>
       </aside>
 

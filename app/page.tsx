@@ -25,7 +25,7 @@ const features = [
   {
     icon: Brain,
     title: "Structure-based signals",
-    text: "Ideas labeled with order blocks, breakers, liquidity, H&S, break & retest — with reasons, not magic scores.",
+    text: "Ideas labeled with order blocks, breakers, liquidity, H&S, break & retest — with reasons.",
   },
   {
     icon: Zap,
@@ -40,7 +40,7 @@ const features = [
   {
     icon: BookOpen,
     title: "Journal & performance",
-    text: "Log trades and review last week, month, year, or all-time from when you started.",
+    text: "Log trades and review last week, month, year, or all-time.",
   },
   {
     icon: FlaskConical,
@@ -51,20 +51,16 @@ const features = [
 
 const faqs = [
   {
-    q: "Will this auto-trade at 95% accuracy?",
-    a: "No. Nothing honest can promise 95% ‘sure’ signals or guaranteed auto-profits. Veytrix is a workspace for data, structure analysis, risk and journaling — you remain responsible for decisions.",
-  },
-  {
     q: "Is market data real?",
-    a: "Crypto uses public Binance data. FX and metals use public chart endpoints. Synthetics depend on your broker and are not freely available as universal public feeds.",
+    a: "Crypto uses public Binance data. FX and metals use public chart endpoints. If a feed is down, the UI falls back cleanly.",
   },
   {
-    q: "Do I need an account?",
-    a: "Yes. Sign up, verify email (demo confirm in this build), then access the dashboard.",
+    q: "Do signals guarantee profits?",
+    a: "No. Signals are structure-based ideas with reasoning. You still manage risk and decisions.",
   },
   {
     q: "Is this financial advice?",
-    a: "No. Trading involves risk of loss. Use the tools as education and process support only.",
+    a: "No. Trading involves risk of loss. Use the tools as process support only.",
   },
 ];
 
@@ -79,20 +75,23 @@ export default function HomePage() {
             Veytrix
           </Link>
           <nav className="hidden gap-8 text-sm text-[var(--muted)] md:flex">
-            <a href="#product" className="hover:text-[var(--foreground)]">Product</a>
-            <a href="#features" className="hover:text-[var(--foreground)]">Features</a>
-            <a href="#faq" className="hover:text-[var(--foreground)]">FAQ</a>
+            <a href="#product" className="hover:text-[var(--foreground)]">
+              Product
+            </a>
+            <a href="#features" className="hover:text-[var(--foreground)]">
+              Features
+            </a>
+            <a href="#faq" className="hover:text-[var(--foreground)]">
+              FAQ
+            </a>
           </nav>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Link href="/login" className="hidden text-sm text-[var(--muted-strong)] hover:text-[var(--foreground)] sm:inline">
-              Log in
-            </Link>
             <Link
-              href="/signup"
+              href="/dashboard"
               className="inline-flex h-10 items-center gap-1.5 rounded-full bg-[var(--accent)] px-4 text-sm font-semibold text-[#050607] hover:opacity-90"
             >
-              Sign up <ArrowRight size={14} />
+              Open app <ArrowRight size={14} />
             </Link>
           </div>
         </div>
@@ -110,15 +109,15 @@ export default function HomePage() {
             <span className="mt-2 block text-[var(--accent)]">Not promises.</span>
           </motion.h1>
           <p className="mx-auto mt-6 max-w-xl text-[var(--muted)]">
-            Live data, structure analysis, 0.2% risk sizing, journal analytics and charts for your own work —
-            built honestly, without fake “sure signal” claims.
+            Live data, structure analysis, 0.2% risk sizing, journal analytics and
+            charts — open the workspace with no login required.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
-              href="/signup"
+              href="/dashboard"
               className="inline-flex h-12 items-center gap-2 rounded-full bg-[var(--accent)] px-7 text-sm font-semibold text-[#050607] hover:opacity-90"
             >
-              Create account <ArrowRight size={16} />
+              Launch workspace <ArrowRight size={16} />
             </Link>
             <a
               href="#product"
@@ -204,7 +203,8 @@ export default function HomePage() {
       </section>
 
       <footer className="border-t border-[var(--border)] py-8 text-center text-xs text-[var(--muted)]">
-        © {new Date().getFullYear()} Veytrix · Trading involves risk · Not financial advice
+        © {new Date().getFullYear()} Veytrix · Trading involves risk · Not
+        financial advice
       </footer>
     </div>
   );
