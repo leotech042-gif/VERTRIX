@@ -5,7 +5,7 @@ import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 
 export function ThemeToggle() {
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -13,8 +13,8 @@ export function ThemeToggle() {
   }, []);
 
   function toggleTheme() {
-    const current = resolvedTheme ?? theme ?? "dark";
-    setTheme(current === "light" ? "dark" : "light");
+    const next = resolvedTheme === "light" ? "dark" : "light";
+    setTheme(next);
   }
 
   if (!mounted) {
@@ -22,27 +22,37 @@ export function ThemeToggle() {
       <button
         type="button"
         aria-label="Toggle theme"
-        className="theme-toggle relative flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--surface)]"
+        className="relative flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--surface)]"
       />
     );
   }
 
+  const isLight = resolvedTheme === "light";
+
   return (
     <button
       type="button"
-      aria-label="Toggle theme"
+      aria-label={isLight ? "Switch to dark mode" : "Switch to light mode"}
       onClick={toggleTheme}
-      className="theme-toggle group relative flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--foreground)] transition-all duration-300 hover:border-[var(--accent-border)] hover:bg-[var(--surface-elevated)]"
+      className="group relative flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--foreground)] transition-all duration-300 hover:border-[var(--accent-border)] hover:bg-[var(--surface-elevated)]"
     >
       <Sun
         size={17}
         strokeWidth={2}
-        className="theme-sun absolute transition-all duration-300"
+        className={`absolute transition-all duration-300 ${
+          isLight
+            ? "rotate-0 scale-100 opacity-100"
+            : "rotate-90 scale-0 opacity-0"
+        }`}
       />
       <Moon
         size={17}
         strokeWidth={2}
-        className="theme-moon absolute transition-all duration-300"
+        className={`absolute transition-all duration-300 ${
+          isLight
+            ? "-rotate-90 scale-0 opacity-0"
+            : "rotate-0 scale-100 opacity-100"
+        }`}
       />
     </button>
   );

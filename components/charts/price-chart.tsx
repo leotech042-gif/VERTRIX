@@ -4,12 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import {
   createChart,
   ColorType,
+  CandlestickSeries,
   type IChartApi,
   type ISeriesApi,
   type CandlestickData,
   type Time,
 } from "lightweight-charts";
-import { motion } from "motion/react";
+import { useTheme } from "next-themes";
 
 type PriceChartProps = {
   symbol?: string;
@@ -35,16 +36,16 @@ export function PriceChart({
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
-  const [status, setStatus] = useState<"loading" | "live" | "fallback" | "error">(
-    "loading",
-  );
-  const [source, setSource] = useState<string>("");
+  const [status, setStatus] = useState<
+    "loading" | "live" | "fallback" | "error"
+  >("loading");
+  const [source, setSource] = useState("");
+  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const isDark =
-      document.documentElement.getAttribute("data-theme") !== "light";
+    const isDark = resolvedTheme !== "light";
 
     const chart = createChart(containerRef.current, {
       width: containerRef.current.clientWidth,
@@ -89,7 +90,8 @@ export function PriceChart({
       handleScroll: { vertTouchDrag: false },
     });
 
-    const series = chart.addCandlestickSeries({
+    // lightweight-charts v5 API
+    const series = chart.addSeries(CandlestickSeries, {
       upColor: "#b5ff55",
       downColor: "#ff5f67",
       borderUpColor: "#b5ff55",
@@ -145,8 +147,6 @@ export function PriceChart({
     }
 
     loadData();
-
-    // Refresh every 45 seconds for near-live feel
     const timer = setInterval(loadData, 45_000);
 
     return () => {
@@ -157,23 +157,19 @@ export function PriceChart({
       chartRef.current = null;
       seriesRef.current = null;
     };
-  }, [height, symbol, interval]);
+  }, [height, symbol, interval, resolvedTheme]);
 
   return (
     <div className={`relative w-full overflow-hidden ${className}`}>
       <div ref={containerRef} style={{ height }} className="w-full" />
 
-      <motion.div
-        initial={{ opacity: 0, y: -4 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="pointer-events-none absolute left-3 top-3 flex items-center gap-2"
-      >
-        <span className="rounded-md border border-[var(--border)] bg-[var(--surface)]/85 px-2.5 py-1 text-[10px] text-[var(--muted)] backdrop-blur-sm">
+      <div className="pointer-events-none absolute left-3 top-3 flex flex-wrap items-center gap-2">
+        <span className="rounded-md border border-[var(--border)] bg-[var(--surface)]/90 px-2.5 py-1 text-[10px] text-[var(--muted)] backdrop-blur-sm">
           {symbol} · {interval}
         </span>
 
         {status === "loading" && (
-          <span className="rounded-md border border-[var(--border)] bg-[var(--surface)]/85 px-2 py-1 text-[10px] text-[var(--muted)] backdrop-blur-sm">
+          <span className="rounded-md border border-[var(--border)] bg-[var(--surface)]/90 px-2 py-1 text-[10px] text-[var(--muted)] backdrop-blur-sm">
             Loading…
           </span>
         )}
@@ -196,7 +192,7 @@ export function PriceChart({
             Data error
           </span>
         )}
-      </motion.div>
+      </div>
     </div>
   );
 }

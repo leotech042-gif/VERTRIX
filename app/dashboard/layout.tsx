@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion } from "motion/react";
 import {
   Activity,
-  BarChart3,
   Brain,
   ChartCandlestick,
   LayoutDashboard,
@@ -31,7 +31,6 @@ export default function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-[var(--background)] text-[var(--foreground)]">
-      {/* Sidebar */}
       <aside className="fixed inset-y-0 left-0 z-40 flex w-60 flex-col border-r border-[var(--border)] bg-[var(--surface)]">
         <div className="flex h-16 items-center gap-2.5 border-b border-[var(--border)] px-5">
           <Link href="/" className="flex items-center gap-2">
@@ -55,14 +54,21 @@ export default function DashboardLayout({
               <Link
                 key={href}
                 href={href}
-                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition ${
+                className={`relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition ${
                   isActive
                     ? "bg-[var(--accent-soft)] font-medium text-[var(--accent)]"
                     : "text-[var(--muted)] hover:bg-[var(--surface-elevated)] hover:text-[var(--foreground)]"
                 }`}
               >
-                <Icon size={17} strokeWidth={1.7} />
-                {label}
+                {isActive && (
+                  <motion.span
+                    layoutId="nav-active"
+                    className="absolute inset-0 rounded-xl bg-[var(--accent-soft)]"
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  />
+                )}
+                <Icon size={17} strokeWidth={1.7} className="relative z-10" />
+                <span className="relative z-10">{label}</span>
               </Link>
             );
           })}
@@ -71,10 +77,8 @@ export default function DashboardLayout({
         <div className="border-t border-[var(--border)] p-3">
           <div className="mb-3 flex items-center justify-between px-2">
             <div className="flex items-center gap-2">
-              <Activity size={14} className="text-[var(--warning)]" />
-              <span className="text-[10px] text-[var(--muted)]">
-                Feed offline
-              </span>
+              <Activity size={14} className="text-[var(--accent)]" />
+              <span className="text-[10px] text-[var(--muted)]">Live data</span>
             </div>
             <ThemeToggle />
           </div>
@@ -89,8 +93,16 @@ export default function DashboardLayout({
         </div>
       </aside>
 
-      {/* Main content */}
-      <div className="ml-60 flex-1">{children}</div>
+      <div className="ml-60 flex-1">
+        <motion.div
+          key={pathname}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+        >
+          {children}
+        </motion.div>
+      </div>
     </div>
   );
 }

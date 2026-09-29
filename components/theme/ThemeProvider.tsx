@@ -12,7 +12,8 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
       defaultTheme="dark"
       enableSystem={false}
       enableColorScheme
-      disableTransitionOnChange
+      storageKey="veytrix-theme"
+      disableTransitionOnChange={false}
       {...props}
     >
       {children}

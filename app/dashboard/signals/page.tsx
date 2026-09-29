@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -106,7 +107,11 @@ export default function SignalsPage() {
   return (
     <main className="min-h-screen px-5 py-7 sm:px-8">
       <div className="mx-auto max-w-[1200px] space-y-7">
-        <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <motion.header
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"
+        >
           <div>
             <div className="mb-2 flex items-center gap-2 text-xs text-[var(--muted)]">
               <span>Workspace</span>
@@ -127,9 +132,8 @@ export default function SignalsPage() {
               {signals.filter((s) => s.status === "Active").length} active
             </span>
           </div>
-        </header>
+        </motion.header>
 
-        {/* Filters */}
         <div className="flex gap-2 overflow-x-auto pb-1">
           {filters.map((f) => (
             <button
@@ -147,71 +151,80 @@ export default function SignalsPage() {
           ))}
         </div>
 
-        {/* Signal cards */}
         <div className="grid gap-4 md:grid-cols-2">
-          {visible.map((signal) => (
-            <article
-              key={signal.id}
-              className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 transition hover:border-[var(--accent-border)]"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-semibold">{signal.symbol}</h2>
-                    <span
-                      className={`rounded-md px-2 py-0.5 text-[10px] font-medium ${
-                        signal.bias === "Bullish"
-                          ? "bg-[var(--accent-soft)] text-[var(--accent)]"
-                          : "bg-red-500/10 text-[var(--danger)]"
-                      }`}
-                    >
-                      {signal.bias === "Bullish" ? (
-                        <span className="flex items-center gap-0.5">
-                          <ArrowUpRight size={11} /> Bullish
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-0.5">
-                          <ArrowDownRight size={11} /> Bearish
-                        </span>
-                      )}
-                    </span>
+          <AnimatePresence mode="popLayout">
+            {visible.map((signal, i) => (
+              <motion.article
+                key={signal.id}
+                layout
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                transition={{ duration: 0.3, delay: i * 0.04 }}
+                className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 transition hover:border-[var(--accent-border)]"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-lg font-semibold">{signal.symbol}</h2>
+                      <span
+                        className={`rounded-md px-2 py-0.5 text-[10px] font-medium ${
+                          signal.bias === "Bullish"
+                            ? "bg-[var(--accent-soft)] text-[var(--accent)]"
+                            : "bg-red-500/10 text-[var(--danger)]"
+                        }`}
+                      >
+                        {signal.bias === "Bullish" ? (
+                          <span className="flex items-center gap-0.5">
+                            <ArrowUpRight size={11} /> Bullish
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-0.5">
+                            <ArrowDownRight size={11} /> Bearish
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-[10px] text-[var(--muted)]">
+                      {signal.timeframe} · {signal.status}
+                    </p>
                   </div>
-                  <p className="mt-1 text-[10px] text-[var(--muted)]">
-                    {signal.timeframe} · {signal.status}
+
+                  <div className="text-right">
+                    <p className="text-xl font-semibold">{signal.confidence}%</p>
+                    <p className="text-[10px] text-[var(--muted)]">confidence</p>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-4 gap-2">
+                  {[
+                    ["Entry", signal.entry],
+                    ["Stop", signal.stop],
+                    ["Target", signal.target],
+                    ["R:R", signal.rr],
+                  ].map(([label, value]) => (
+                    <div
+                      key={label}
+                      className="rounded-lg border border-[var(--border)] bg-[var(--background)] p-2.5 text-center"
+                    >
+                      <p className="text-[9px] text-[var(--muted)]">{label}</p>
+                      <p className="mt-1 text-xs font-semibold">{value}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-4 flex items-start gap-2 rounded-xl border border-[var(--border)] bg-[var(--background)] p-3">
+                  <Brain
+                    size={14}
+                    className="mt-0.5 shrink-0 text-[var(--accent)]"
+                  />
+                  <p className="text-[11px] leading-4 text-[var(--muted-strong)]">
+                    {signal.reason}
                   </p>
                 </div>
-
-                <div className="text-right">
-                  <p className="text-xl font-semibold">{signal.confidence}%</p>
-                  <p className="text-[10px] text-[var(--muted)]">confidence</p>
-                </div>
-              </div>
-
-              <div className="mt-4 grid grid-cols-4 gap-2">
-                {[
-                  ["Entry", signal.entry],
-                  ["Stop", signal.stop],
-                  ["Target", signal.target],
-                  ["R:R", signal.rr],
-                ].map(([label, value]) => (
-                  <div
-                    key={label}
-                    className="rounded-lg border border-[var(--border)] bg-[var(--background)] p-2.5 text-center"
-                  >
-                    <p className="text-[9px] text-[var(--muted)]">{label}</p>
-                    <p className="mt-1 text-xs font-semibold">{value}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-4 flex items-start gap-2 rounded-xl border border-[var(--border)] bg-[var(--background)] p-3">
-                <Brain size={14} className="mt-0.5 shrink-0 text-[var(--accent)]" />
-                <p className="text-[11px] leading-4 text-[var(--muted-strong)]">
-                  {signal.reason}
-                </p>
-              </div>
-            </article>
-          ))}
+              </motion.article>
+            ))}
+          </AnimatePresence>
         </div>
 
         {visible.length === 0 && (
