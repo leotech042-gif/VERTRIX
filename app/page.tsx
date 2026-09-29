@@ -1,8 +1,23 @@
+"use client";
+
 import Link from "next/link";
-import { ArrowRight, BarChart3, ShieldCheck, Sparkles } from "lucide-react";
+import { motion } from "motion/react";
+import {
+  ArrowRight,
+  BarChart3,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 import { FAQ } from "@/components/landing/FAQ";
+import { LiveTickerBar } from "@/components/landing/LiveTickerBar";
 import { ProductShowcase } from "@/components/landing/showcase/ProductShowcase";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { PriceChart } from "@/components/charts/price-chart";
+import {
+  formatChange,
+  formatPrice,
+  useLiveTickers,
+} from "@/hooks/useLiveTickers";
 
 const features = [
   {
@@ -26,64 +41,61 @@ const features = [
 ];
 
 export default function Home() {
+  const { tickers } = useLiveTickers(30_000);
+  const xau = tickers["XAU/USD"];
+
   return (
     <main className="min-h-screen overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
       {/* Navigation */}
-      <header className="fixed inset-x-0 top-0 z-50">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-8">
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-[var(--border)]/60 bg-[var(--background)]/80 backdrop-blur-md">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--accent-border)] bg-[var(--accent-soft)]">
-              <span className="h-2.5 w-2.5 rounded-full bg-[var(--accent)] shadow-[0_0_18px_var(--accent)]" />
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--accent-border)] bg-[var(--accent-soft)]">
+              <span className="h-2 w-2 rounded-full bg-[var(--accent)] shadow-[0_0_14px_var(--accent)]" />
             </span>
-
-            <span className="text-lg font-semibold tracking-[-0.03em]">
+            <span className="text-base font-semibold tracking-[-0.03em]">
               Veytrix
             </span>
           </Link>
 
-          <nav className="hidden items-center gap-8 md:flex">
-            <Link
+          <nav className="hidden items-center gap-7 md:flex">
+            <a
               href="#platform"
               className="text-sm text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
             >
               Platform
-            </Link>
-
-            <Link
+            </a>
+            <a
               href="#features"
               className="text-sm text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
             >
               Features
-            </Link>
-
-            <Link
+            </a>
+            <a
               href="#intelligence"
               className="text-sm text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
             >
               Intelligence
-            </Link>
-
-            <Link
+            </a>
+            <a
               href="#faq"
               className="text-sm text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
             >
               FAQ
-            </Link>
+            </a>
           </nav>
 
           <div className="flex items-center gap-3">
             <ThemeToggle />
-
             <Link
               href="/login"
               className="hidden text-sm font-medium text-[var(--muted-strong)] transition-colors hover:text-[var(--foreground)] sm:block"
             >
               Sign in
             </Link>
-
             <Link
               href="/signup"
-              className="group flex items-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-[#050607] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_35px_rgba(181,255,85,0.18)]"
+              className="group flex items-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[#050607] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_35px_rgba(181,255,85,0.18)]"
             >
               Get started
               <ArrowRight
@@ -96,33 +108,48 @@ export default function Home() {
       </header>
 
       {/* Hero */}
-      <section className="relative flex min-h-screen items-center pt-24">
+      <section className="relative flex min-h-[88vh] items-center pt-20">
         <div className="absolute inset-0 -z-10 grid-background opacity-40" />
+        <div className="absolute left-1/2 top-0 -z-10 h-[520px] w-[820px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.05] blur-[130px]" />
 
-        <div className="absolute left-1/2 top-0 -z-10 h-[600px] w-[900px] -translate-x-1/2 rounded-full bg-[var(--accent)] opacity-[0.045] blur-[140px]" />
-
-        <div className="mx-auto w-full max-w-7xl px-6 pb-24 pt-20 lg:px-8 lg:pb-32">
+        <div className="mx-auto w-full max-w-7xl px-6 pb-16 pt-16 lg:px-8">
           <div className="mx-auto max-w-4xl text-center">
-            {/* Eyebrow */}
-            <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2 text-xs font-medium text-[var(--muted-strong)] shadow-[0_10px_40px_rgba(0,0,0,0.12)]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)] shadow-[0_0_10px_var(--accent)]" />
-              AI-powered trading intelligence
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="mb-7 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2 text-xs font-medium text-[var(--muted-strong)]"
+            >
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--accent)] shadow-[0_0_10px_var(--accent)]" />
+              Live market data connected
+            </motion.div>
 
-            {/* Heading */}
-            <h1 className="text-balance text-5xl font-semibold tracking-[-0.055em] sm:text-6xl lg:text-8xl">
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, delay: 0.05 }}
+              className="text-balance text-5xl font-semibold tracking-[-0.055em] sm:text-6xl lg:text-7xl"
+            >
               Trade with{" "}
               <span className="text-[var(--accent)]">intelligence.</span>
-            </h1>
+            </motion.h1>
 
-            {/* Description */}
-            <p className="text-pretty mx-auto mt-7 max-w-2xl text-base leading-7 text-[var(--muted)] sm:text-lg">
-              Veytrix combines market structure, price action and AI-powered
-              analysis into one intelligent trading environment.
-            </p>
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.12 }}
+              className="mx-auto mt-6 max-w-2xl text-base leading-7 text-[var(--muted)] sm:text-lg"
+            >
+              Veytrix combines live market data, structure analysis and AI-powered
+              trade planning into one focused trading environment.
+            </motion.p>
 
-            {/* Actions */}
-            <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.18 }}
+              className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row"
+            >
               <Link
                 href="/signup"
                 className="group flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-6 text-sm font-semibold text-[#050607] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_15px_50px_rgba(181,255,85,0.2)]"
@@ -134,169 +161,150 @@ export default function Home() {
                 />
               </Link>
 
-              <Link
+              <a
                 href="#platform"
-                className="flex h-12 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--surface)] px-6 text-sm font-medium text-[var(--foreground)] transition-all duration-300 hover:border-[var(--accent-border)] hover:bg-[var(--surface-elevated)]"
+                className="flex h-12 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--surface)] px-6 text-sm font-medium transition-all duration-300 hover:border-[var(--accent-border)] hover:bg-[var(--surface-elevated)]"
               >
-                Explore Veytrix
-              </Link>
-            </div>
+                Explore platform
+              </a>
+            </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Animated Platform Showcase */}
-      <ProductShowcase />
+      {/* Live prices strip */}
+      <LiveTickerBar />
+
+      {/* Platform showcase */}
+      <div id="platform">
+        <ProductShowcase />
+      </div>
 
       {/* Features */}
-      <section id="features" className="border-t border-[var(--border)] py-28">
+      <section id="features" className="border-t border-[var(--border)] py-24">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="max-w-2xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5 }}
+            className="max-w-2xl"
+          >
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent)]">
               Built for serious traders
             </p>
-
             <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">
               Everything you need to understand the market.
             </h2>
-
             <p className="mt-5 text-base leading-7 text-[var(--muted)]">
-              Veytrix is designed around the actual trading workflow — from
-              market analysis to execution planning and risk management.
+              From live prices to structured analysis and risk planning — one
+              workspace for the full trading process.
             </p>
-          </div>
+          </motion.div>
 
-          <div className="mt-14 grid gap-4 md:grid-cols-3">
-            {features.map((feature) => {
+          <div className="mt-12 grid gap-4 md:grid-cols-3">
+            {features.map((feature, i) => {
               const Icon = feature.icon;
-
               return (
-                <div
+                <motion.div
                   key={feature.title}
+                  initial={{ opacity: 0, y: 18 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.2 }}
+                  transition={{ duration: 0.4, delay: i * 0.08 }}
                   className="group rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[var(--accent-border)] hover:bg-[var(--surface-elevated)]"
                 >
                   <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--accent-border)] bg-[var(--accent-soft)] text-[var(--accent)]">
                     <Icon size={20} strokeWidth={1.7} />
                   </div>
-
-                  <h3 className="mt-6 text-lg font-semibold">
-                    {feature.title}
-                  </h3>
-
+                  <h3 className="mt-6 text-lg font-semibold">{feature.title}</h3>
                   <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
                     {feature.description}
                   </p>
-                </div>
+                </motion.div>
               );
             })}
           </div>
         </div>
       </section>
 
-      {/* Intelligence */}
+      {/* Intelligence — real chart */}
       <section
         id="intelligence"
-        className="border-t border-[var(--border)] py-28"
+        className="border-t border-[var(--border)] py-24"
       >
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="grid items-center gap-16 lg:grid-cols-2">
-            <div>
+          <div className="grid items-center gap-12 lg:grid-cols-2">
+            <motion.div
+              initial={{ opacity: 0, x: -16 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.5 }}
+            >
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent)]">
-                Veytrix intelligence
+                Live market intelligence
               </p>
-
               <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">
-                From raw price data to a structured trading plan.
+                Real prices. Real charts. Clear structure.
               </h2>
-
               <p className="mt-6 max-w-xl text-base leading-7 text-[var(--muted)]">
-                Instead of throwing random indicators at a chart, Veytrix is
-                built around structure, liquidity, price action and disciplined
-                risk management.
+                Charts pull from live market sources. No fake videos or generated
+                media — only price data you can actually trade around.
               </p>
 
-              <div className="mt-8 space-y-4">
+              <div className="mt-8 space-y-3">
                 {[
-                  "Multi-timeframe market analysis",
-                  "Structured AI trade reasoning",
-                  "Entry, stop-loss and target planning",
-                  "Risk-aware position analysis",
+                  "Live forex, metals, crypto and indices",
+                  "Candlestick charts with real OHLC data",
+                  "Watchlist and instrument explorer",
+                  "Risk calculator before you size a trade",
                 ].map((item) => (
                   <div key={item} className="flex items-center gap-3">
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[10px] text-[var(--accent)]">
                       ✓
                     </span>
-
                     <span className="text-sm text-[var(--muted-strong)]">
                       {item}
                     </span>
                   </div>
                 ))}
               </div>
-            </div>
 
-            <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_30px_100px_rgba(0,0,0,0.2)]">
-              <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-5">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-[var(--muted)]">
-                      AI trade analysis
-                    </p>
+              <Link
+                href="/dashboard/markets"
+                className="mt-8 inline-flex h-11 items-center gap-2 rounded-full bg-[var(--accent)] px-5 text-sm font-semibold text-[#050607] transition hover:opacity-90"
+              >
+                Open markets
+                <ArrowRight size={15} />
+              </Link>
+            </motion.div>
 
-                    <p className="mt-1 text-lg font-semibold">XAU/USD</p>
-                  </div>
-
-                  <span className="rounded-full bg-[var(--accent-soft)] px-3 py-1 text-[10px] font-medium text-[var(--accent)]">
-                    ACTIVE
-                  </span>
-                </div>
-
-                <div className="mt-6 grid grid-cols-2 gap-3">
-                  <div className="rounded-xl border border-[var(--border)] p-4">
-                    <p className="text-[10px] uppercase tracking-wider text-[var(--muted)]">
-                      Bias
-                    </p>
-
-                    <p className="mt-2 text-sm font-semibold text-[var(--accent)]">
-                      Bullish
-                    </p>
-                  </div>
-
-                  <div className="rounded-xl border border-[var(--border)] p-4">
-                    <p className="text-[10px] uppercase tracking-wider text-[var(--muted)]">
-                      Confidence
-                    </p>
-
-                    <p className="mt-2 text-sm font-semibold">92%</p>
-                  </div>
-                </div>
-
-                <div className="mt-3 rounded-xl border border-[var(--border)] p-4">
-                  <p className="text-[10px] uppercase tracking-wider text-[var(--muted)]">
-                    Setup
+            <motion.div
+              initial={{ opacity: 0, x: 16 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.5 }}
+              className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[0_30px_100px_rgba(0,0,0,0.18)] sm:p-5"
+            >
+              <div className="mb-3 flex items-center justify-between px-1">
+                <div>
+                  <p className="text-xs text-[var(--muted)]">XAU/USD</p>
+                  <p className="mt-0.5 text-lg font-semibold tabular-nums">
+                    {formatPrice(xau?.price, "XAU/USD")}
                   </p>
-
-                  <div className="mt-3 grid grid-cols-3 gap-3 text-center">
-                    <div>
-                      <p className="text-[9px] text-[var(--muted)]">Entry</p>
-                      <p className="mt-1 text-xs font-medium">2,648.20</p>
-                    </div>
-
-                    <div>
-                      <p className="text-[9px] text-[var(--muted)]">SL</p>
-                      <p className="mt-1 text-xs font-medium">2,640.80</p>
-                    </div>
-
-                    <div>
-                      <p className="text-[9px] text-[var(--muted)]">TP</p>
-                      <p className="mt-1 text-xs font-medium text-[var(--accent)]">
-                        2,685.20
-                      </p>
-                    </div>
-                  </div>
                 </div>
+                <span
+                  className={`rounded-full px-2.5 py-1 text-[10px] font-medium ${
+                    (xau?.changePercent ?? 0) >= 0
+                      ? "bg-[var(--accent-soft)] text-[var(--accent)]"
+                      : "bg-[var(--danger)]/10 text-[var(--danger)]"
+                  }`}
+                >
+                  {formatChange(xau?.changePercent)}
+                </span>
               </div>
-            </div>
+              <PriceChart symbol="XAU/USD" height={280} />
+            </motion.div>
           </div>
         </div>
       </section>
@@ -306,179 +314,78 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-t border-[var(--border)]">
-        <div className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
-          <div className="grid gap-12 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
-            {/* Brand */}
+        <div className="mx-auto max-w-7xl px-6 py-14 lg:px-8">
+          <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
             <div>
               <Link href="/" className="flex items-center gap-2">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--accent-border)] bg-[var(--accent-soft)]">
-                  <span className="h-2.5 w-2.5 rounded-full bg-[var(--accent)] shadow-[0_0_18px_var(--accent)]" />
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--accent-border)] bg-[var(--accent-soft)]">
+                  <span className="h-2 w-2 rounded-full bg-[var(--accent)]" />
                 </span>
-
-                <span className="text-lg font-semibold tracking-[-0.03em]">
-                  Veytrix
-                </span>
+                <span className="text-base font-semibold">Veytrix</span>
               </Link>
-
-              <p className="mt-5 max-w-sm text-sm leading-6 text-[var(--muted)]">
-                AI-powered trading intelligence for traders who want a clearer,
-                more structured way to understand the markets.
+              <p className="mt-4 max-w-sm text-sm leading-6 text-[var(--muted)]">
+                Live market data and structured analysis for traders who want
+                clarity before they risk capital.
               </p>
-
-              {/* Socials */}
-              <div className="mt-6 flex flex-wrap items-center gap-2">
-                <a
-                  href="#"
-                  aria-label="Veytrix on X"
-                  className="flex h-9 items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-[11px] text-[var(--muted)] transition-all hover:border-[var(--accent-border)] hover:text-[var(--foreground)]"
-                >
-                  X
-                </a>
-
-                <a
-                  href="#"
-                  aria-label="Veytrix on Instagram"
-                  className="flex h-9 items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-[11px] text-[var(--muted)] transition-all hover:border-[var(--accent-border)] hover:text-[var(--foreground)]"
-                >
-                  Instagram
-                </a>
-
-                <a
-                  href="#"
-                  aria-label="Veytrix on LinkedIn"
-                  className="flex h-9 items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-[11px] text-[var(--muted)] transition-all hover:border-[var(--accent-border)] hover:text-[var(--foreground)]"
-                >
-                  LinkedIn
-                </a>
-
-                <a
-                  href="#"
-                  aria-label="Veytrix on GitHub"
-                  className="flex h-9 items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-[11px] text-[var(--muted)] transition-all hover:border-[var(--accent-border)] hover:text-[var(--foreground)]"
-                >
-                  GitHub
-                </a>
-              </div>
             </div>
 
-            {/* Platform */}
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.16em]">
                 Platform
               </p>
-
-              <div className="mt-5 space-y-3 text-sm text-[var(--muted)]">
-                <Link
-                  className="block transition-colors hover:text-[var(--foreground)]"
-                  href="/dashboard"
-                >
+              <div className="mt-4 space-y-2.5 text-sm text-[var(--muted)]">
+                <Link className="block hover:text-[var(--foreground)]" href="/dashboard">
                   Dashboard
                 </Link>
-
-                <Link
-                  className="block transition-colors hover:text-[var(--foreground)]"
-                  href="/dashboard/markets"
-                >
+                <Link className="block hover:text-[var(--foreground)]" href="/dashboard/markets">
                   Markets
                 </Link>
-
-                <Link
-                  className="block transition-colors hover:text-[var(--foreground)]"
-                  href="/dashboard/signals"
-                >
+                <Link className="block hover:text-[var(--foreground)]" href="/dashboard/signals">
                   AI Signals
                 </Link>
-
-                <Link
-                  className="block transition-colors hover:text-[var(--foreground)]"
-                  href="/dashboard/terminal"
-                >
-                  Trading Terminal
+                <Link className="block hover:text-[var(--foreground)]" href="/dashboard/terminal">
+                  Terminal
                 </Link>
-
-                <Link
-                  className="block transition-colors hover:text-[var(--foreground)]"
-                  href="/dashboard/risk-engine"
-                >
+                <Link className="block hover:text-[var(--foreground)]" href="/dashboard/risk-engine">
                   Risk Engine
                 </Link>
               </div>
             </div>
 
-            {/* Company */}
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.16em]">
-                Company
+                Account
               </p>
-
-              <div className="mt-5 space-y-3 text-sm text-[var(--muted)]">
-                <Link
-                  className="block transition-colors hover:text-[var(--foreground)]"
-                  href="#features"
-                >
-                  Features
-                </Link>
-
-                <Link
-                  className="block transition-colors hover:text-[var(--foreground)]"
-                  href="#faq"
-                >
-                  FAQ
-                </Link>
-
-                <Link
-                  className="block transition-colors hover:text-[var(--foreground)]"
-                  href="/login"
-                >
+              <div className="mt-4 space-y-2.5 text-sm text-[var(--muted)]">
+                <Link className="block hover:text-[var(--foreground)]" href="/login">
                   Sign in
                 </Link>
-
-                <Link
-                  className="block transition-colors hover:text-[var(--foreground)]"
-                  href="/signup"
-                >
+                <Link className="block hover:text-[var(--foreground)]" href="/signup">
                   Create account
                 </Link>
+                <a className="block hover:text-[var(--foreground)]" href="#faq">
+                  FAQ
+                </a>
               </div>
             </div>
 
-            {/* Legal */}
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.16em]">
                 Legal
               </p>
-
-              <div className="mt-5 space-y-3 text-sm text-[var(--muted)]">
-                <a
-                  href="#"
-                  className="block transition-colors hover:text-[var(--foreground)]"
-                >
-                  Privacy
-                </a>
-
-                <a
-                  href="#"
-                  className="block transition-colors hover:text-[var(--foreground)]"
-                >
-                  Terms
-                </a>
-
-                <a
-                  href="#"
-                  className="block transition-colors hover:text-[var(--foreground)]"
-                >
-                  Risk Disclosure
-                </a>
+              <div className="mt-4 space-y-2.5 text-sm text-[var(--muted)]">
+                <span className="block">Privacy</span>
+                <span className="block">Terms</span>
+                <span className="block">Risk Disclosure</span>
               </div>
             </div>
           </div>
 
-          <div className="mt-14 flex flex-col gap-4 border-t border-[var(--border)] pt-6 text-xs text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-12 flex flex-col gap-3 border-t border-[var(--border)] pt-6 text-xs text-[var(--muted)] sm:flex-row sm:justify-between">
             <p>© 2026 Veytrix. All rights reserved.</p>
-
             <p>
-              Trading involves risk. Veytrix provides technology and analysis
-              tools, not financial advice.
+              Trading involves risk. Veytrix provides tools and analysis — not
+              financial advice.
             </p>
           </div>
         </div>
