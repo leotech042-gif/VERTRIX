@@ -1,31 +1,44 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { BookOpen, Plus, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Plus, Trash2 } from "lucide-react";
+import { getSession } from "@/lib/auth";
+import {
+  filterByPeriod,
+  summarize,
+  type Period,
+  type TradeRecord,
+} from "@/lib/performance";
 
-type JournalEntry = {
-  id: string;
-  symbol: string;
-  side: "Long" | "Short";
-  result: "Win" | "Loss" | "BE" | "Open";
-  notes: string;
-  date: string;
-};
+const KEY = "veytrix-trades";
 
-const STORAGE_KEY = "veytrix-journal";
+const PERIODS: { id: Period; label: string }[] = [
+  { id: "week", label: "Last week" },
+  { id: "3weeks", label: "Last 3 weeks" },
+  { id: "month", label: "1 month" },
+  { id: "4months", label: "4 months" },
+  { id: "year", label: "Last year" },
+  { id: "total", label: "Total" },
+];
 
 export default function JournalPage() {
-  const [entries, setEntries] = useState<JournalEntry[]>([]);
+  const [trades, setTrades] = useState<TradeRecord[]>([]);
+  const [period, setPeriod] = useState<Period>("total");
+  const [ready, setReady] = useState(false);
+  const [startedAt, setStartedAt] = useState<string | undefined>();
+
   const [symbol, setSymbol] = useState("XAU/USD");
   const [side, setSide] = useState<"Long" | "Short">("Long");
-  const [result, setResult] = useState<JournalEntry["result"]>("Open");
+  const [result, setResult] = useState<TradeRecord["result"]>("Open");
   const [notes, setNotes] = useState("");
-  const [ready, setReady] = useState(false);
+  const [rMultiple, setRMultiple] = useState("");
 
   useEffect(() => {
+    const s = getSession();
+    setStartedAt(s?.startedAt);
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setEntries(JSON.parse(raw));
+      const raw = localStorage.getItem(KEY);
+      if (raw) setTrades(JSON.parse(raw));
     } catch {
       // ignore
     }
@@ -34,75 +47,93 @@ export default function JournalPage() {
 
   useEffect(() => {
     if (!ready) return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-  }, [entries, ready]);
+    localStorage.setItem(KEY, JSON.stringify(trades));
+  }, [trades, ready]);
 
-  function addEntry(e: React.FormEvent) {
+  const filtered = useMemo(
+    () => filterByPeriod(trades, period, startedAt),
+    [trades, period, startedAt],
+  );
+  const stats = useMemo(() => summarize(filtered), [filtered]);
+
+  function addTrade(e: React.FormEvent) {
     e.preventDefault();
-    if (!symbol.trim()) return;
-
-    const entry: JournalEntry = {
+    const t: TradeRecord = {
       id: crypto.randomUUID(),
       symbol: symbol.trim().toUpperCase(),
       side,
+      entry: 0,
       result,
-      notes: notes.trim(),
-      date: new Date().toISOString().slice(0, 10),
+      openedAt: new Date().toISOString(),
+      closedAt: result === "Open" ? undefined : new Date().toISOString(),
+      notes: notes.trim() || undefined,
+      rMultiple: rMultiple ? parseFloat(rMultiple) : undefined,
     };
-
-    setEntries((prev) => [entry, ...prev]);
+    setTrades((prev) => [t, ...prev]);
     setNotes("");
+    setRMultiple("");
   }
 
-  function removeEntry(id: string) {
-    setEntries((prev) => prev.filter((x) => x.id !== id));
+  function remove(id: string) {
+    setTrades((prev) => prev.filter((t) => t.id !== id));
   }
-
-  const wins = entries.filter((e) => e.result === "Win").length;
-  const losses = entries.filter((e) => e.result === "Loss").length;
 
   return (
     <main className="min-h-screen px-4 py-7 sm:px-8">
       <div className="mx-auto max-w-4xl space-y-6">
         <header>
           <p className="text-xs text-[var(--muted)]">Workspace / Journal</p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">
-            Trade journal
-          </h1>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight">Journal & performance</h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
-            Log setups and outcomes. Saved in this browser.
+            Track results by period from when you started using the app.
+            {startedAt && (
+              <span className="ml-1 text-[var(--muted-strong)]">
+                Started {new Date(startedAt).toLocaleDateString()}
+              </span>
+            )}
           </p>
         </header>
 
-        <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
-            <p className="text-xs text-[var(--muted)]">Entries</p>
-            <p className="mt-2 text-2xl font-semibold">{entries.length}</p>
-          </div>
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
-            <p className="text-xs text-[var(--muted)]">Wins</p>
-            <p className="mt-2 text-2xl font-semibold text-[var(--accent)]">
-              {wins}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
-            <p className="text-xs text-[var(--muted)]">Losses</p>
-            <p className="mt-2 text-2xl font-semibold text-[var(--danger)]">
-              {losses}
-            </p>
-          </div>
+        <div className="flex flex-wrap gap-2">
+          {PERIODS.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => setPeriod(p.id)}
+              className={`rounded-lg border px-3 py-1.5 text-xs transition ${
+                period === p.id
+                  ? "border-[var(--accent-border)] bg-[var(--accent-soft)] text-[var(--accent)]"
+                  : "border-[var(--border)] text-[var(--muted)] hover:text-[var(--foreground)]"
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-4">
+          {[
+            ["Trades", String(stats.total)],
+            ["Win rate", `${stats.winRate}%`],
+            ["Wins / Losses", `${stats.wins} / ${stats.losses}`],
+            ["Avg R", String(stats.avgR)],
+          ].map(([l, v]) => (
+            <div
+              key={l}
+              className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4"
+            >
+              <p className="text-xs text-[var(--muted)]">{l}</p>
+              <p className="mt-2 text-xl font-semibold">{v}</p>
+            </div>
+          ))}
         </div>
 
         <form
-          onSubmit={addEntry}
+          onSubmit={addTrade}
           className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5"
         >
-          <div className="flex items-center gap-2">
-            <BookOpen size={16} className="text-[var(--accent)]" />
-            <p className="text-sm font-semibold">New entry</p>
-          </div>
-
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <p className="text-sm font-semibold">Log trade</p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
             <input
               value={symbol}
               onChange={(e) => setSymbol(e.target.value)}
@@ -112,92 +143,79 @@ export default function JournalPage() {
             <select
               value={side}
               onChange={(e) => setSide(e.target.value as "Long" | "Short")}
-              className="h-10 rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 text-sm outline-none"
+              className="h-10 rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 text-sm"
             >
               <option value="Long">Long</option>
               <option value="Short">Short</option>
             </select>
             <select
               value={result}
-              onChange={(e) =>
-                setResult(e.target.value as JournalEntry["result"])
-              }
-              className="h-10 rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 text-sm outline-none"
+              onChange={(e) => setResult(e.target.value as TradeRecord["result"])}
+              className="h-10 rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 text-sm"
             >
               <option value="Open">Open</option>
               <option value="Win">Win</option>
               <option value="Loss">Loss</option>
               <option value="BE">Break even</option>
             </select>
+            <input
+              value={rMultiple}
+              onChange={(e) => setRMultiple(e.target.value)}
+              placeholder="R multiple (e.g. 1.5)"
+              className="h-10 rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 text-sm outline-none focus:border-[var(--accent-border)]"
+            />
           </div>
-
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Notes: setup, mistakes, what you did well…"
-            rows={3}
-            className="mt-3 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm outline-none focus:border-[var(--accent-border)]"
+            placeholder="Why you took it · what happened · lesson"
+            rows={2}
+            className="mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm outline-none focus:border-[var(--accent-border)]"
           />
-
           <button
             type="submit"
             className="mt-3 inline-flex h-10 items-center gap-2 rounded-xl bg-[var(--accent)] px-4 text-sm font-semibold text-[#050607]"
           >
-            <Plus size={15} />
-            Add entry
+            <Plus size={15} /> Add
           </button>
         </form>
 
-        <div className="space-y-3">
-          {entries.map((entry) => (
+        <div className="space-y-2">
+          {filtered.map((t) => (
             <div
-              key={entry.id}
-              className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4"
+              key={t.id}
+              className="flex items-start justify-between gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4"
             >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold">{entry.symbol}</span>
-                    <span className="rounded-md border border-[var(--border)] px-2 py-0.5 text-[10px]">
-                      {entry.side}
-                    </span>
-                    <span
-                      className={`rounded-md px-2 py-0.5 text-[10px] font-medium ${
-                        entry.result === "Win"
-                          ? "bg-[var(--accent-soft)] text-[var(--accent)]"
-                          : entry.result === "Loss"
-                            ? "bg-[var(--danger)]/10 text-[var(--danger)]"
-                            : "text-[var(--muted)]"
-                      }`}
-                    >
-                      {entry.result}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-[10px] text-[var(--muted)]">
-                    {entry.date}
-                  </p>
-                  {entry.notes && (
-                    <p className="mt-2 text-sm text-[var(--muted-strong)]">
-                      {entry.notes}
-                    </p>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-semibold">{t.symbol}</span>
+                  <span className="text-[10px] text-[var(--muted)]">{t.side}</span>
+                  <span className="text-[10px] text-[var(--muted)]">{t.result}</span>
+                  {t.rMultiple != null && (
+                    <span className="text-[10px] text-[var(--accent)]">{t.rMultiple}R</span>
                   )}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => removeEntry(entry.id)}
-                  className="rounded-lg border border-[var(--border)] p-2 text-[var(--muted)] hover:text-[var(--danger)]"
-                  aria-label="Delete"
-                >
-                  <Trash2 size={14} />
-                </button>
+                <p className="mt-1 text-[10px] text-[var(--muted)]">
+                  Opened {new Date(t.openedAt).toLocaleString()}
+                  {t.closedAt && ` · Closed ${new Date(t.closedAt).toLocaleString()}`}
+                </p>
+                {t.notes && (
+                  <p className="mt-2 text-sm text-[var(--muted-strong)]">{t.notes}</p>
+                )}
               </div>
+              <button
+                type="button"
+                onClick={() => remove(t.id)}
+                className="rounded-lg border border-[var(--border)] p-2 text-[var(--muted)] hover:text-[var(--danger)]"
+              >
+                <Trash2 size={14} />
+              </button>
             </div>
           ))}
-
-          {entries.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-[var(--border)] py-14 text-center text-sm text-[var(--muted)]">
-              No journal entries yet. Add your first trade above.
-            </div>
+          {filtered.length === 0 && (
+            <p className="py-10 text-center text-sm text-[var(--muted)]">
+              No trades in this period yet.
+            </p>
           )}
         </div>
       </div>
