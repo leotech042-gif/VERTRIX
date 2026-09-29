@@ -1,18 +1,24 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
 
 export default function SignupPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    window.location.href = "/dashboard";
+    setLoading(true);
+    setTimeout(() => {
+      router.push("/dashboard");
+    }, 400);
   }
 
   return (
@@ -108,10 +114,11 @@ export default function SignupPage() {
 
           <button
             type="submit"
-            className="mt-6 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent)] text-sm font-semibold text-[#050607] transition hover:opacity-90"
+            disabled={loading}
+            className="mt-6 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent)] text-sm font-semibold text-[#050607] transition hover:opacity-90 disabled:opacity-60"
           >
-            Create account
-            <ArrowRight size={16} />
+            {loading ? "Creating account…" : "Create account"}
+            {!loading && <ArrowRight size={16} />}
           </button>
 
           <p className="mt-5 text-center text-xs text-[var(--muted)]">

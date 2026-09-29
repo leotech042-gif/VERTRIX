@@ -1,18 +1,24 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // Auth not connected yet — redirect to dashboard for demo
-    window.location.href = "/dashboard";
+    setLoading(true);
+    // Demo auth — no backend yet
+    setTimeout(() => {
+      router.push("/dashboard");
+    }, 400);
   }
 
   return (
@@ -98,10 +104,11 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent)] text-sm font-semibold text-[#050607] transition hover:opacity-90"
+            disabled={loading}
+            className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent)] text-sm font-semibold text-[#050607] transition hover:opacity-90 disabled:opacity-60"
           >
-            Sign in
-            <ArrowRight size={16} />
+            {loading ? "Signing in…" : "Sign in"}
+            {!loading && <ArrowRight size={16} />}
           </button>
 
           <p className="mt-5 text-center text-xs text-[var(--muted)]">
@@ -116,7 +123,7 @@ export default function LoginPage() {
         </form>
 
         <p className="mt-6 text-center text-[10px] text-[var(--muted)]">
-          Demo mode — any credentials will open the dashboard
+          Demo mode — any email and password will open the dashboard
         </p>
       </div>
     </main>
