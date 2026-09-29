@@ -1,16 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  createChart,
-  ColorType,
-  CandlestickSeries,
-  type IChartApi,
-  type ISeriesApi,
-  type CandlestickData,
-  type Time,
-} from "lightweight-charts";
-import { useTheme } from "next-themes";
 
 type PriceChartProps = {
   symbol?: string;
@@ -19,7 +9,7 @@ type PriceChartProps = {
   className?: string;
 };
 
-type CandlePayload = {
+type Candle = {
   time: number;
   open: number;
   high: number;
@@ -34,162 +24,145 @@ export function PriceChart({
   className = "",
 }: PriceChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const chartRef = useRef<IChartApi | null>(null);
-  const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
-  const [status, setStatus] = useState<
-    "loading" | "live" | "fallback" | "error"
-  >("loading");
+  const [status, setStatus] = useState<"loading" | "live" | "fallback" | "error">(
+    "loading",
+  );
   const [source, setSource] = useState("");
-  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    let disposed = false;
+    let chart: { remove: () => void } | null = null;
+    let resizeObserver: ResizeObserver | null = null;
 
-    const isDark = resolvedTheme !== "light";
+    async function init() {
+      if (!containerRef.current) return;
 
-    const chart = createChart(containerRef.current, {
-      width: containerRef.current.clientWidth,
-      height,
-      layout: {
-        background: { type: ColorType.Solid, color: "transparent" },
-        textColor: isDark ? "#8c938c" : "#687067",
-        fontFamily: "inherit",
-      },
-      grid: {
-        vertLines: {
-          color: isDark ? "rgba(255,255,255,0.04)" : "rgba(17,21,16,0.06)",
-        },
-        horzLines: {
-          color: isDark ? "rgba(255,255,255,0.04)" : "rgba(17,21,16,0.06)",
-        },
-      },
-      crosshair: {
-        mode: 0,
-        vertLine: {
-          color: isDark ? "rgba(181,255,85,0.35)" : "rgba(112,184,45,0.4)",
-          width: 1,
-          style: 2,
-          labelBackgroundColor: isDark ? "#101410" : "#f0f3ed",
-        },
-        horzLine: {
-          color: isDark ? "rgba(181,255,85,0.35)" : "rgba(112,184,45,0.4)",
-          width: 1,
-          style: 2,
-          labelBackgroundColor: isDark ? "#101410" : "#f0f3ed",
-        },
-      },
-      rightPriceScale: {
-        borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(17,21,16,0.09)",
-        scaleMargins: { top: 0.1, bottom: 0.1 },
-      },
-      timeScale: {
-        borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(17,21,16,0.09)",
-        timeVisible: true,
-        secondsVisible: false,
-      },
-      handleScroll: { vertTouchDrag: false },
-    });
-
-    // lightweight-charts v5 API
-    const series = chart.addSeries(CandlestickSeries, {
-      upColor: "#b5ff55",
-      downColor: "#ff5f67",
-      borderUpColor: "#b5ff55",
-      borderDownColor: "#ff5f67",
-      wickUpColor: "#b5ff55",
-      wickDownColor: "#ff5f67",
-    });
-
-    chartRef.current = chart;
-    seriesRef.current = series;
-
-    const resizeObserver = new ResizeObserver(() => {
-      if (containerRef.current && chartRef.current) {
-        chartRef.current.applyOptions({
-          width: containerRef.current.clientWidth,
-        });
-      }
-    });
-
-    resizeObserver.observe(containerRef.current);
-
-    let cancelled = false;
-
-    async function loadData() {
-      setStatus("loading");
       try {
+        const lc = await import("lightweight-charts");
+        const { createChart, ColorType, CandlestickSeries } = lc;
+
+        const isDark =
+          document.documentElement.getAttribute("data-theme") !== "light";
+
+        const instance = createChart(containerRef.current, {
+          width: containerRef.current.clientWidth,
+          height,
+          layout: {
+            background: { type: ColorType.Solid, color: "transparent" },
+            textColor: isDark ? "#8c938c" : "#687067",
+            fontFamily: "inherit",
+          },
+          grid: {
+            vertLines: {
+              color: isDark
+                ? "rgba(255,255,255,0.04)"
+                : "rgba(17,21,16,0.06)",
+            },
+            horzLines: {
+              color: isDark
+                ? "rgba(255,255,255,0.04)"
+                : "rgba(17,21,16,0.06)",
+            },
+          },
+          rightPriceScale: {
+            borderColor: isDark
+              ? "rgba(255,255,255,0.08)"
+              : "rgba(17,21,16,0.09)",
+          },
+          timeScale: {
+            borderColor: isDark
+              ? "rgba(255,255,255,0.08)"
+              : "rgba(17,21,16,0.09)",
+            timeVisible: true,
+            secondsVisible: false,
+          },
+        });
+
+        chart = instance;
+
+        const series = instance.addSeries(CandlestickSeries, {
+          upColor: "#b5ff55",
+          downColor: "#ff5f67",
+          borderUpColor: "#b5ff55",
+          borderDownColor: "#ff5f67",
+          wickUpColor: "#b5ff55",
+          wickDownColor: "#ff5f67",
+        });
+
+        resizeObserver = new ResizeObserver(() => {
+          if (containerRef.current && chart) {
+            instance.applyOptions({ width: containerRef.current.clientWidth });
+          }
+        });
+        resizeObserver.observe(containerRef.current);
+
+        setStatus("loading");
         const res = await fetch(
           `/api/market/klines?symbol=${encodeURIComponent(symbol)}&interval=${interval}`,
         );
         const json = await res.json();
+        if (disposed) return;
 
-        if (cancelled) return;
-
-        const candles: CandlePayload[] = json.candles ?? [];
-        const mapped: CandlestickData<Time>[] = candles.map((c) => ({
-          time: c.time as Time,
-          open: c.open,
-          high: c.high,
-          low: c.low,
-          close: c.close,
-        }));
-
-        if (mapped.length > 0 && seriesRef.current) {
-          seriesRef.current.setData(mapped);
-          chartRef.current?.timeScale().fitContent();
+        const candles: Candle[] = json.candles ?? [];
+        if (candles.length > 0) {
+          series.setData(
+            candles.map((c) => ({
+              time: c.time as lc.Time,
+              open: c.open,
+              high: c.high,
+              low: c.low,
+              close: c.close,
+            })),
+          );
+          instance.timeScale().fitContent();
         }
 
-        setSource(json.source ?? "unknown");
+        setSource(json.source ?? "");
         setStatus(json.source === "fallback" ? "fallback" : "live");
-      } catch {
-        if (!cancelled) setStatus("error");
+      } catch (err) {
+        console.error("Chart error:", err);
+        if (!disposed) setStatus("error");
       }
     }
 
-    loadData();
-    const timer = setInterval(loadData, 45_000);
+    init();
 
     return () => {
-      cancelled = true;
-      clearInterval(timer);
-      resizeObserver.disconnect();
-      chart.remove();
-      chartRef.current = null;
-      seriesRef.current = null;
+      disposed = true;
+      resizeObserver?.disconnect();
+      try {
+        chart?.remove();
+      } catch {
+        // ignore
+      }
     };
-  }, [height, symbol, interval, resolvedTheme]);
+  }, [symbol, interval, height]);
 
   return (
     <div className={`relative w-full overflow-hidden ${className}`}>
       <div ref={containerRef} style={{ height }} className="w-full" />
-
-      <div className="pointer-events-none absolute left-3 top-3 flex flex-wrap items-center gap-2">
-        <span className="rounded-md border border-[var(--border)] bg-[var(--surface)]/90 px-2.5 py-1 text-[10px] text-[var(--muted)] backdrop-blur-sm">
-          {symbol} · {interval}
+      <div className="pointer-events-none absolute left-3 top-3 flex gap-2">
+        <span className="rounded-md border border-[var(--border)] bg-[var(--surface)]/90 px-2 py-1 text-[10px] text-[var(--muted)]">
+          {symbol}
         </span>
-
+        {status === "live" && (
+          <span className="rounded-md border border-[var(--accent-border)] bg-[var(--accent-soft)] px-2 py-1 text-[10px] text-[var(--accent)]">
+            Live {source && `· ${source}`}
+          </span>
+        )}
         {status === "loading" && (
-          <span className="rounded-md border border-[var(--border)] bg-[var(--surface)]/90 px-2 py-1 text-[10px] text-[var(--muted)] backdrop-blur-sm">
+          <span className="rounded-md border border-[var(--border)] bg-[var(--surface)]/90 px-2 py-1 text-[10px] text-[var(--muted)]">
             Loading…
           </span>
         )}
-
-        {status === "live" && (
-          <span className="flex items-center gap-1.5 rounded-md border border-[var(--accent-border)] bg-[var(--accent-soft)] px-2 py-1 text-[10px] font-medium text-[var(--accent)] backdrop-blur-sm">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--accent)]" />
-            Live · {source}
-          </span>
-        )}
-
-        {status === "fallback" && (
-          <span className="rounded-md border border-[var(--warning)]/40 bg-[var(--warning)]/10 px-2 py-1 text-[10px] text-[var(--warning)] backdrop-blur-sm">
-            Offline mode
-          </span>
-        )}
-
         {status === "error" && (
-          <span className="rounded-md border border-[var(--danger)]/40 bg-[var(--danger)]/10 px-2 py-1 text-[10px] text-[var(--danger)] backdrop-blur-sm">
-            Data error
+          <span className="rounded-md border border-[var(--danger)]/30 bg-[var(--danger)]/10 px-2 py-1 text-[10px] text-[var(--danger)]">
+            Chart unavailable
+          </span>
+        )}
+        {status === "fallback" && (
+          <span className="rounded-md border border-[var(--warning)]/30 bg-[var(--warning)]/10 px-2 py-1 text-[10px] text-[var(--warning)]">
+            Offline data
           </span>
         )}
       </div>
