@@ -5,10 +5,12 @@ import { usePathname } from "next/navigation";
 import {
   BookOpen,
   Brain,
+  Briefcase,
   ChartCandlestick,
   FlaskConical,
   LayoutDashboard,
   LogOut,
+  Settings,
   ShieldCheck,
   Terminal,
 } from "lucide-react";
@@ -19,6 +21,7 @@ const navItems = [
   { href: "/dashboard/markets", label: "Markets", icon: ChartCandlestick },
   { href: "/dashboard/signals", label: "AI Signals", icon: Brain },
   { href: "/dashboard/terminal", label: "Terminal", icon: Terminal },
+  { href: "/dashboard/positions", label: "Positions", icon: Briefcase },
   { href: "/dashboard/risk-engine", label: "Risk Engine", icon: ShieldCheck },
   { href: "/dashboard/journal", label: "Journal", icon: BookOpen },
   { href: "/dashboard/backtesting", label: "Backtesting", icon: FlaskConical },
@@ -68,7 +71,18 @@ export default function DashboardLayout({
         </nav>
 
         <div className="border-t border-[var(--border)] p-2">
-          <div className="mb-2 flex items-center justify-between px-2">
+          <Link
+            href="/settings"
+            className={`mb-1 flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition ${
+              pathname.startsWith("/settings")
+                ? "bg-[var(--accent-soft)] font-medium text-[var(--accent)]"
+                : "text-[var(--muted)] hover:bg-[var(--surface-elevated)] hover:text-[var(--foreground)]"
+            }`}
+          >
+            <Settings size={16} />
+            Settings
+          </Link>
+          <div className="mb-1 flex items-center justify-between px-3 py-2">
             <span className="text-[10px] text-[var(--muted)]">Theme</span>
             <ThemeToggle />
           </div>
