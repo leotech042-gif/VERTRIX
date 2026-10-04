@@ -26,13 +26,17 @@ class MarketDataService:
         return out
 
     def _display(self, sym: str) -> str:
-        if sym.endswith("USD") and len(sym) == 6 and sym[:3] in ("EUR", "GBP", "AUD", "USD"):
-            return f"{sym[:3]}/{sym[3:]}"
-        if sym in ("XAUUSD", "XAGUSD"):
-            return f"{sym[:3]}/{sym[3:]}"
-        if sym in ("BTCUSD", "ETHUSD"):
-            return f"{sym[:3]}/{sym[3:]}"
-        return sym
+        pairs = {
+            "BTCUSD": "BTC/USD",
+            "ETHUSD": "ETH/USD",
+            "SOLUSD": "SOL/USD",
+            "EURUSD": "EUR/USD",
+            "GBPUSD": "GBP/USD",
+            "USDJPY": "USD/JPY",
+            "XAUUSD": "XAU/USD",
+            "XAGUSD": "XAG/USD",
+        }
+        return pairs.get(sym, sym)
 
     async def get_klines(self, symbol: str, timeframe: str, limit: int) -> dict[str, Any]:
         key = normalize_symbol(symbol)
@@ -65,6 +69,11 @@ class MarketDataService:
         if meta["provider"] == "binance":
             t = await fetch_binance_ticker(meta["id"])
         else:
-            t = await fetch_yahoo_ticker(meta["id"])
+            t = await fetch_yahoo_ticker(meta["id"], key)
 
-        return {"symbol": key, **t, "delayed": meta["provider"] == "yahoo"}
+        return {
+            "symbol": key,
+            "display": self._display(key),
+            **t,
+            "delayed": meta["provider"] == "yahoo",
+        }
