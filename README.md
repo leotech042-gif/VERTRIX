@@ -1,63 +1,50 @@
-# Veytrix
+# VEYTRIX
 
-AI-powered trading intelligence platform built with **Next.js 16**, live market data, charts, signals, terminal and risk tools.
+Autonomous AI-assisted trading platform.
 
-## Features
+**Stack**
+- `apps/web` — Next.js 15, React, TypeScript, Tailwind (UI + custom charting)
+- `apps/api` — Python FastAPI (market data, analysis, risk, backtest, execution adapters)
+- PostgreSQL / Supabase (planned)
+- Redis (planned for cache / jobs)
 
-- Live market prices (Binance for crypto, Yahoo for forex/metals/indices)
-- Candlestick charts (`lightweight-charts` v5)
-- Markets explorer + watchlist (saved in browser)
-- AI Signals board
-- Trading Terminal (demo order ticket)
-- Risk Engine (position size calculator)
-- Dark / light theme
-- Landing page with live ticker and real charts
+## Quick start
 
-## Getting started
-
+### Frontend
 ```bash
+cd apps/web
 npm install
 npm run dev
 ```
+Open http://localhost:3000
 
-Open [http://localhost:3000](http://localhost:3000).
-
-### Demo login
-
-Any email + password on `/login` or `/signup` opens the dashboard (no real auth yet).
-
-## Project structure
-
+### Backend
+```bash
+cd apps/api
+python -m venv .venv
+# Windows: .venv\Scripts\activate
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
 ```
-app/
-  page.tsx                 # Landing
-  login/ signup/           # Auth (demo)
-  dashboard/               # App workspace
-    markets/
-    signals/
-    terminal/
-    risk-engine/
-  api/market/              # Live data API routes
-components/
-  charts/                  # PriceChart
-  landing/                 # FAQ, ticker, showcase
-  theme/                   # Dark mode
-  ui/                      # Button, Card, Input, Badge
-  dashboard/               # Shared dashboard pieces
-hooks/                     # useLiveTickers, useWatchlist
-lib/                       # market-data, utils
-```
+API docs: http://localhost:8000/docs
 
-## Scripts
+## Architecture
 
-| Command        | Description        |
-|----------------|--------------------|
-| `npm run dev`  | Development server |
-| `npm run build`| Production build   |
-| `npm run start`| Start production   |
-| `npm run lint` | ESLint             |
+See `docs/ARCHITECTURE.md`.
 
-## Notes
+## Honest product rules
 
-- Market data is public and may rate-limit; the app falls back gracefully.
-- Not financial advice. Trading involves risk.
+- No fabricated live prices or trade results.
+- No guaranteed win-rate claims.
+- Paper trading first; live broker execution only via explicit adapters + user opt-in.
+- Simulated/demo data is always labeled.
+
+## Implementation phases
+
+1. Foundation (this commit)
+2. Market data + custom chart engine
+3. Python analysis engine (SMC / price action)
+4. Signals + monitoring
+5. Paper trading + backtest + journal
+6. Subscriptions, admin, hardening
